@@ -29,6 +29,7 @@ import (
 	"github.com/uber-common/bark"
 	"github.com/uber/cadence/common/metrics"
 	"github.com/uber/cadence/common/persistence"
+	"fmt"
 )
 
 var (
@@ -207,6 +208,8 @@ TaskFilterLoop:
 			break TaskFilterLoop
 		}
 
+		fmt.Printf("@@ new timer task %v\n", task)
+
 		t.logger.Debugf("Moving timer read level: (%s)", timerSequenceID)
 		t.readLevel = timerSequenceID
 
@@ -302,6 +305,10 @@ MoveAckLevelLoop:
 			delete(outstandingTasks, current)
 			t.logger.Debugf("Moving timer ack level to %v.", ackLevel)
 		} else {
+			if current.VisibilityTimestamp.Add(30*time.Minute).Before(time.Now()) {
+				fmt.Printf("## Not acked %v\n", current)
+			}
+
 			break MoveAckLevelLoop
 		}
 	}
